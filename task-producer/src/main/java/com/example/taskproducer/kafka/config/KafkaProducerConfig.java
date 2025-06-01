@@ -40,7 +40,7 @@ public class KafkaProducerConfig {
     public NewTopic taskQueueTopic(){
         return TopicBuilder.name("task-queue-topic")
                 .partitions(3)
-                .replicas(2)
+                .replicas(1)
                 .build();
     }
 }
