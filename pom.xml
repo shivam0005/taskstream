@@ -13,7 +13,7 @@
     <modules>
         <module>task-producer</module>
         <!-- future modules here -->
-        <!-- <module>task-consumer</module> -->
+         <module>task-consumer</module>
         <!-- <module>task-api</module> -->
     </modules>
 
