@@ -1,5 +1,6 @@
 package com.example.taskconsumer.processor.impl;
 
+import com.example.taskconsumer.exception.TaskProcessingException;
 import com.example.taskconsumer.processor.TaskProcessor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.SimpleMailMessage;
@@ -17,17 +18,22 @@ public class EmailTaskProcessor implements TaskProcessor {
     @Override
     public void process(Map<String, Object> payload) {
 
-        String to = (String) payload.get("to");
-        String subject = (String) payload.get("subject");
-        String body = (String) payload.get("body");
+        try {
+            String to = (String) payload.get("to");
+            String subject = (String) payload.get("subject");
+            String body = (String) payload.get("body");
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(body);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            message.setSubject(subject);
+            message.setText(body);
 
 
-        mailSender.send(message);
+            mailSender.send(message);
+        } catch (Exception e){
+            throw new TaskProcessingException("Failed to send email", e);
+        }
+
     }
 
     public EmailTaskProcessor(JavaMailSender mailSender){

@@ -26,17 +26,18 @@ public class TaskConsumer {
         }
 
         @KafkaListener(topics = "${kafka.topic.name}", groupId = "${kafka.group.id}")
-        public void consumeTask(String message){
-            try {
-                Map<String, Object> taskMap = objectMapper.readValue(message, new TypeReference<>() {});
-                String taskType = (String) taskMap.get("taskType");
-                Object payloadObj = taskMap.get("payload");
-                Map<String, Object> payload = objectMapper.convertValue(payloadObj, new TypeReference<>() {});
+        public void consumeTask(String message) throws Exception{
+            Map<String, Object> taskMap = objectMapper.readValue(message, new TypeReference<>() {});
+            String taskType = (String) taskMap.get("taskType");
+            Object payloadObj = taskMap.get("payload");
+            Map<String, Object> payload = objectMapper.convertValue(payloadObj, new TypeReference<>() {});
 
-                registry.getProcessor(taskType).process(payload);
-                logger.info("Processed taskType: {}", taskType);
-            } catch (Exception e) {
-                logger.error("Failed to process message: {}", message, e);
+                // Simulate failure if payload contains simulateFail=true
+            if (payload.getOrDefault("simulateFail", false).equals(true)) {
+                throw new RuntimeException("Simulated failure for testing DLQ");
             }
+
+            registry.getProcessor(taskType).process(payload);
+            logger.info("Processed taskType: {}", taskType);
         }
 }
