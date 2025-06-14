@@ -7,10 +7,10 @@
 ## 🏗️ Project Structure
 
 taskstream/
-├── task-producer/ # Accepts task requests and publishes to Kafka
-├── task-consumer/ # Consumes tasks from Kafka and executes processing (email, SMS)
-├── notification-service/ # Sends email/SMS via third-party APIs (e.g., SMTP, Msg91)
-└── pom.xml # Parent Maven project file
+  - task-producer/ # Accepts task requests and publishes to Kafka
+  - task-consumer/ # Consumes tasks from Kafka and executes processing (email, SMS)
+  - notification-service/ # Sends email/SMS via third-party APIs (e.g., SMTP, Msg91)
+  - pom.xml # Parent Maven project file
 
 
 ---
