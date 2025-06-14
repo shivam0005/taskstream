@@ -7,9 +7,9 @@
 ## 🏗️ Project Structure
 
 taskstream/
-├── task-producer/ # Module to accept task requests and publish them to Kafka
-├── task-consumer/ # Module to consume and process tasks from Kafka and execute them (e.g., send email)
-├── common/ # (Optional) Shared utilities and DTOs
+├── task-producer/ # Accepts task requests and publishes to Kafka
+├── task-consumer/ # Consumes tasks from Kafka and executes processing (email, SMS)
+├── notification-service/ # Sends email/SMS via third-party APIs (e.g., SMTP, Msg91)
 └── pom.xml # Parent Maven project file
 
 
@@ -30,7 +30,7 @@ taskstream/
 git clone https://github.com/shivam0005/taskstream.git
 cd taskstream
 
-Run the Task Producer
+▶️ Run the Task Producer
 cd task-producer
 mvn spring-boot:run
 
@@ -46,39 +46,141 @@ Content-Type: application/json
   }
 }
 
-Run the Task Consumer
+{
+  "taskType": "sms",
+  "payload": {
+    "name": "xxxxx",
+    "mobile": "9188XXXXXXXX"
+  }
+}
+
+
+
+
+▶️ Run the Task Consumer
 
 cd ../task-consumer
 mvn spring-boot:run
 
-On receiving a task from Kafka, the consumer dynamically routes it to the correct processor. Currently supports:
+Listens to Kafka
 
-✅ email task type: sends real email using SMTP
+Deserializes the message
+
+Dynamically routes to the right processor (email, SMS)
+
+On failure, message is retried and sent to DLQ if retries fail
+
+
+
+▶️ Run the Notification Service
+
+cd ../notification-service
+mvn spring-boot:run
+
+REST API to handle email and SMS delivery
+
+Integrates with:
+
+  SMTP (for email)
+  Msg91 (for SMS)
+
+
 
 🧠 Architecture Overview
-Task Producer: Accepts incoming task requests via REST and pushes to Kafka topic.
 
-Task Consumer: Listens to Kafka, deserializes the message, and routes it to appropriate task processor (e.g., email sender).
+                         ┌───────────────────────┐
+                         │   Task Producer API   │
+                         │ (Receives HTTP Tasks) │
+                         └──────────┬────────────┘
+                                    │
+                                    ▼
+                           [Kafka Topic: task-topic]
+                                    │
+                                    ▼
+                         ┌────────────────────────┐
+                         │    Task Consumer        │
+                         │ (Consumes & Routes)     │
+                         └──────────┬──────────────┘
+                                    │
+                                    ▼
+                    ┌────────────────────────────┐
+                    │  TaskProcessor Registry     │
+                    └──────────┬──────────────────┘
+                               │
+           ┌──────────────────┴──────────────────┐
+           ▼                                     ▼
+  ┌──────────────────────┐           ┌──────────────────────┐
+  │ Email Task Processor │           │ SMS Task Processor   │
+  └─────────┬────────────┘           └──────────┬────────────┘
+            │Rest Api                           │Rest Api
+            ▼                                   ▼
+     ┌────────────────────────┐        ┌────────────────────────┐
+     │ Notification Service   │        │ Notification Service   │
+     │                        │        │ (REST API for SMS)     │
+     └─────────┬──────────────┘        └──────────┬─────────────┘
+               │                                       │
+         Uses SMTP                             Uses MSG91 API
+               │                                       │
+               ▼                                       ▼
+       [Real Email Delivery]                 [Real SMS Delivery]
 
-Processor Registry: Maps taskType to corresponding TaskProcessor implementation.
+                 ↘                            ↙
+               [DLQ Topic: task-dlq-topic] (If errors/failures)
 
-Extensible Design: Easily pluggable for more task types (e.g., SMS, push notifications).
+
+- Task Producer: Accepts REST task requests and publishes them to a Kafka topic.
+
+- Task Consumer:
+
+  - Subscribes to Kafka topic(s).
+
+  - Deserializes each task message.
+
+  - Dynamically routes to a processor (e.g., email, sms) based on taskType.
+
+  - Delegates actual message delivery (email/SMS) by calling the Notification Service via REST API.
+
+- Notification Service:
+
+  - Exposes REST endpoints for email and SMS delivery.
+
+  - Integrates with:
+
+    - SMTP (for email)
+
+    - Msg91 (for SMS)
+
+  - Returns success/failure responses, which the consumer handles accordingly.
+
+
+✅ Supported Task Types
+
+  - email: Sends actual emails via SMTP
+
+  - sms: Sends real SMS via Msg91
+
+
+
+🔄 Fault Tolerance
+
+  - Integrated DLQ (Dead Letter Queue) via Kafka for unprocessable messages
+
+  - Custom retry logic using DefaultErrorHandler
+
 
 
 📌 Roadmap
 
-✅ Task Producer with dynamic Kafka topic creation
+✅ Task Producer module
 
-✅ Task Consumer module with task processing framework
+✅ Task Consumer module with task-type routing
 
-✅ Email task processor (real email sending using SMTP)
+✅ Email processor (SMTP)
 
-⏳ Common module for DTOs and shared logic
+✅ SMS processor (Msg91 integration)
 
-⏳ Retry logic and error handling
+✅ DLQ support with retries
 
-⏳ Observability: logging, tracing, metrics
-
-⏳ Authentication & Authorization
+⏳ Observability (metrics, tracing)
 
 ⏳ Docker & CI/CD setup
