@@ -13,7 +13,7 @@ import java.util.Map;
 //@RequiredArgsConstructor
 public class EmailTaskProcessor implements TaskProcessor {
 
-    private final JavaMailSender mailSender;
+//    private final JavaMailSender mailSender;
 
     @Override
     public void process(Map<String, Object> payload) {
@@ -29,14 +29,15 @@ public class EmailTaskProcessor implements TaskProcessor {
             message.setText(body);
 
 
-            mailSender.send(message);
+//            mailSender.send(message);
+
         } catch (Exception e){
             throw new TaskProcessingException("Failed to send email", e);
         }
 
     }
 
-    public EmailTaskProcessor(JavaMailSender mailSender){
-        this.mailSender = mailSender;
-    }
+//    public EmailTaskProcessor(JavaMailSender mailSender){
+//        this.mailSender = mailSender;
+//    }
 }

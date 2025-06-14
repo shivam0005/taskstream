@@ -54,7 +54,6 @@ public class KafkaConsumerConfig {
         FixedBackOff fixedBackOff = new FixedBackOff(1000L, 3);
 
         DefaultErrorHandler errorHandler = new DefaultErrorHandler((consumerRecord, exception) -> {
-            // Log or take any action
             log.error("Publishing message to DLQ: {}", consumerRecord.value(), exception);
             Object rawValue = consumerRecord.value();
             if (rawValue instanceof String message){
